@@ -10,10 +10,22 @@ if video.isOpened():
 else:
     print("Error with opening video")
 
+width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = video.get(cv2.CAP_PROP_FPS)
+
+fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+out = cv2.VideoWriter("output_with_text.avi", fourcc, fps, (width, height))
+
 while video.isOpened():
     ret, frame = video.read()
     if ret:
         cv2.imshow("Frame", frame)
+
+        cv2.putText(frame, "Lorem Ispum", (200, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+        cv2.imshow("written video", frame)
+        out.write(frame)
+
         k = cv2.waitKey(20)
         if k == 113:
             break
