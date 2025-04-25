@@ -6,7 +6,8 @@ def show_detection(img, faces):
         cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), thickness=5)
     return img
 
-image = cv2.imread("face.jpg")
+image = cv2.imread("image2.jpg")
+# image = cv2.imread("face.jpg")
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 classifier_alt2 = cv2.CascadeClassifier("haarcascade_frontalface_alt2.xml")
