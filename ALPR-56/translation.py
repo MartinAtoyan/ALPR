@@ -8,7 +8,7 @@ tx = image_width / 4
 ty = image_height / 4
 
 matrix = numpy.array([[1, 0, tx],
-                      [0, 1, ty]],
+                            [0, 1, ty]],
                      dtype=numpy.float32)
 
 translated_image = cv2.warpAffine(original_image, M=matrix, dsize=(image_width, image_height))

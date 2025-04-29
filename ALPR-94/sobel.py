@@ -1,5 +1,3 @@
-# Which function's derivative
-
 import cv2
 import numpy
 
