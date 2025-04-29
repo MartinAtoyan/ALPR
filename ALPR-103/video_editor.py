@@ -66,14 +66,23 @@ def start_recording():
             frame = cv2.medianBlur(frame, 7)
 
         if is_drawn:
-            frame = cv2.rectangle(frame, (20, 20), (1260, 700), (0, 0, 255), 3) # 1280 x 720 pixels
+            frame = cv2.rectangle(frame, (20, 20), (1260, 700), (0, 0, 255), 3)  # 1280 x 720 pixels
 
         if timer:
             duration = time.time() - start_time
             minutes = int(duration // 60)
             seconds = int(duration % 60)
-            text = f"{minutes}:{seconds}"
-            cv2.putText(frame, text, (40, 1220), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 3, lineType=cv2.LINE_AA)
+            text = f"{minutes:02d}:{seconds:02d}"
+            text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1, 3)[0]
+            cv2.rectangle(frame, (25, 25), (35 + text_size[0], 65), (0, 0, 0), -1)
+            cv2.putText(frame, text, (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, lineType=cv2.LINE_AA)
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        classifier = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+        face = classifier.detectMultiScale(gray)
+        for (x, y, w, h) in face:
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2, cv2.LINE_AA)
 
         output.write(frame)
         cv2.imshow("Recording", frame)
@@ -115,7 +124,6 @@ def start_recording():
 
     camera.release()
     output.release()
-
 
 if __name__ == "__main__":
     start_recording()
