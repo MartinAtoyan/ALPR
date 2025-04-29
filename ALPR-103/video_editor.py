@@ -75,12 +75,16 @@ def start_recording():
             text = f"{minutes:02d}:{seconds:02d}"
             text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1, 3)[0]
             cv2.rectangle(frame, (25, 25), (35 + text_size[0], 65), (0, 0, 0), -1)
-            cv2.putText(frame, text, (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, lineType=cv2.LINE_AA)
+            cv2.putText(
+                frame, text, (30, 60),
+                cv2.FONT_HERSHEY_SIMPLEX, 1,
+                (255, 255, 255), 2, lineType=cv2.LINE_AA)
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         classifier = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
         face = classifier.detectMultiScale(gray)
+
         for (x, y, w, h) in face:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2, cv2.LINE_AA)
 
