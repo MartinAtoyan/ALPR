@@ -21,5 +21,3 @@ with open("number_plate.csv", mode="w", newline='') as csv_file:
             
             writer.writerow([image_name, plate_number])
             count += 1
-
-# print(count) 499
