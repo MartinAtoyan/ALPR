@@ -11,9 +11,10 @@ image_folder = Path("/Users/picsartacademy/Desktop/cropped_plates/images")
 expected_plates = []
 with open(csv_file, 'r', newline='') as csvfile:
     reader_csv = csv.reader(csvfile)
+
     for row in reader_csv:
-        if len(row) >= 2:
-            expected_plates.append(row[1].strip())
+            plate_value = row[0].split()
+            expected_plates.append(plate_value[1])
 
 detected_plates = []
 for image_path in sorted(image_folder.glob("*.png")):
@@ -21,7 +22,11 @@ for image_path in sorted(image_folder.glob("*.png")):
     for (_, text, prob) in result:
         detected_plates.append(text.strip())
 
-match = detected_plates == expected_plates
-print("Match:", match)
+# match = detected_plates == expected_plates
 
+# print("Match:", match)
 
+# print(len(detected_plates))
+# print(len(expected_plates))
+
+print(detected_plates)
