@@ -62,3 +62,4 @@ print(len(detected_plates)) # 347
 print(len(expected_plates)) # 499
 
 # Tesseract doesnt work well with armenian number plates, but good in georgian.
+# draft
