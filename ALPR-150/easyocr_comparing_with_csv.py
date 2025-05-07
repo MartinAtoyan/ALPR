@@ -13,14 +13,14 @@ with open(csv_file, 'r', newline='') as csvfile:
     reader_csv = csv.reader(csvfile)
     for row in reader_csv:
             plate_value = row[0].split()
-            expected_plates.append(plate_value[1].replace(" ", ""))
+            expected_plates.append(plate_value[1].replace(" ", "").lower())
 
 detected_plates = []
 for image_path in sorted(image_folder.glob("*.png")):
     result = reader.readtext(str(image_path))
     for (_, text, prob) in result:
         if len(text.strip()) > 4:
-            detected_plates.append({text.strip(): f'{prob:.2f}'})
+            detected_plates.append({text.strip().lower(): f'{prob:.2f}'})
 
 for elem in detected_plates:
     plate = list(elem.keys())[0]
