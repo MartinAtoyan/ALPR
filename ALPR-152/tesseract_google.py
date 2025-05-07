@@ -42,7 +42,7 @@ for image_path in sorted(image_folder.glob("*.png")):
     image = cv2.imread(str(image_path))
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur = cv2.bilateralFilter(gray, 11, 17, 17)  # Denoise
+    blur = cv2.bilateralFilter(gray, 11, 17, 17)
     thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                    cv2.THRESH_BINARY, 11, 2)
 
@@ -61,5 +61,5 @@ for detected_plate in detected_plates:
 print(len(detected_plates)) # 347
 print(len(expected_plates)) # 499
 
-# Tesseract doesnt work well with armenian number plates, but good in georgian.
+# Tesseract doesn't work well with armenian number plates, but good in georgian.
 # draft
