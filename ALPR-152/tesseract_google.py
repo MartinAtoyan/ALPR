@@ -13,20 +13,6 @@ with open(csv_file) as csvfile:
         plate = row[0].split()
         expected_plates.append(plate[1].replace(" ", "").lower())
 
-# detected_plates = []
-# for image_path in sorted(image_folder.glob("*.png")):
-#     image = cv2.imread(str(image_path))
-#     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#     text = pytesseract.image_to_string(image)
-#     if len(text) > 4:
-#         detected_plates.append(text.replace(" ", "").lower())
-#
-# for detected_plate in detected_plates:
-#     if detected_plate in expected_plates:
-#         print(f"{detected_plate} is in expected plates")
-#     else:
-#         print(f"{detected_plate} is not in expected plates")
-
 custom_config = (
     r'--oem 3 --psm 7 '
     r'-c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -42,9 +28,9 @@ for image_path in sorted(image_folder.glob("*.png")):
     image = cv2.imread(str(image_path))
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blur = cv2.bilateralFilter(gray, 11, 17, 17)
+    blur = cv2.GaussianBlur(gray, (13, 13), 0)
     thresh = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                   cv2.THRESH_BINARY, 11, 2)
+                                   cv2.THRESH_BINARY_INV, 11, 2)
 
     text = pytesseract.image_to_string(thresh, config=custom_config, lang='eng+rus')
     cleaned_text = text.replace(" ", "").replace("\n", "").strip().lower()
@@ -58,8 +44,8 @@ for detected_plate in detected_plates:
     else:
         print(f"{detected_plate} is NOT in expected plates")
 
-print(len(detected_plates)) # 347
-print(len(expected_plates)) # 499
+print(len(detected_plates))  # 371
+print(len(expected_plates))  # 499
 
-# Tesseract doesn't work well with armenian number plates, but good in georgian.
+# Tesseract doesn't work well with armenian number plates, but good in georgian and russian.
 # draft
