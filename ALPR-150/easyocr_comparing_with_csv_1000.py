@@ -1,16 +1,11 @@
 import os
 import csv
-import easyocr
 import time
+import easyocr
 from pathlib import Path
 from algorithm import levenshtein_distance
-from itertools import zip_longest
 
 reader = easyocr.Reader(['en'])
-
-# csv filey urish a
-# 1000 hatanoc dataseti csv filey chka
-# csv file sarqel taza dataseti hamar
 
 # csv_file = "/Users/picsartacademy/Desktop/ALPR/ALPR-142/number_plate.csv"
 csv_file = "/home/martin/PycharmProjects/ALPR/ALPR-150/number_plate_1000.csv"

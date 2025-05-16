@@ -1,6 +1,6 @@
 import os
-import json
 import csv
+import json
 import dotenv
 
 json_files_path_am = "/home/martin/Desktop/cropped_plates_1000/labels/armenian"
