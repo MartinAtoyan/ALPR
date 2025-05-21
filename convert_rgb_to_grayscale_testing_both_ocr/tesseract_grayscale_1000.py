@@ -1,35 +1,28 @@
 import os
 import csv
 import time
-import easyocr
+import pytesseract
+from PIL import Image
 from pathlib import Path
 from algorithm import levenshtein_distance
 
-reader = easyocr.Reader(['en'])
-reader2 = easyocr.Reader(['en', 'hy'])
-
-# csv_file = "/Users/picsartacademy/Desktop/ALPR/ALPR-142/number_plate.csv"
 csv_file = "/home/martin/PycharmProjects/ALPR/ALPR-150/number_plate_1000.csv"
-# image_folder = Path("/Users/picsartacademy/Desktop/cropped_plates/images")
-image_folder = Path("/home/martin/Desktop/cropped_plates/images")
 
-image_folder_am = Path("/home/martin/Desktop/cropped_plates_1000/images/armenian")
-image_folder_ge = Path("/home/martin/Desktop/cropped_plates_1000/images/georgian")
-image_folder_eu = Path("/home/martin/Desktop/cropped_plates_1000/images/eu/images")
-image_folder_ru = Path("/home/martin/Desktop/cropped_plates_1000/images/russian")
-
+image_folder_am = Path("/home/martin/Desktop/gray_1000/armenian")
+image_folder_eu = Path("/home/martin/Desktop/gray_1000/eu")
+image_folder_ge = Path("/home/martin/Desktop/gray_1000/georgian")
+image_folder_ru = Path("/home/martin/Desktop/gray_1000/russian")
 
 def clear_text(string: str):
     return (string.replace("/", "").replace(",", "").
             replace(".", "").replace("-", "").
-            replace(" ", "").replace("|", "").lower())
+            replace(" ", "").replace("|", "").replace("\n", "").lower().strip("\f"))
 
 
 start_time = time.time()
 expected_plates = {}
 
-
-def image_name_in_expected_plates(image_name_func, detected_text, highest_prob, expect_plates, results_func):
+def image_name_in_expected_plates(image_name_func, detected_text, expect_plates, results_func):
     if image_name_func in expect_plates:
         expected_plate_func = expect_plates[image_name_func]
         results_func.append({
@@ -37,8 +30,7 @@ def image_name_in_expected_plates(image_name_func, detected_text, highest_prob, 
             "expected": expected_plate_func,
             "detected": detected_text,
             "match": expected_plate_func == detected_text,
-            "confidence": highest_prob,
-            "CER": 1 - (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
+            "CER": (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
         })
 
 with open(csv_file, 'r', newline='') as csvfile:
@@ -63,99 +55,80 @@ undetected_images_ru = []
 
 for image_path_am in sorted(image_folder_am.glob("*.png")):
     image_name_am = image_path_am.name
-    result_am = reader2.readtext(str(image_path_am))
+    image_am = Image.open(image_path_am)
+    result_am = pytesseract.image_to_string(image_am)
 
-    if not result_am:
+    detected_text_am = clear_text(result_am)
+
+    if not detected_text_am:
         undetected_images_am.append(image_name_am)
         continue
 
-    detected_text_am = ""
-    highest_prob_am = 0
-
-    for bbox_am, text_am, prob_am in result_am:
-        if prob_am > highest_prob_am:
-            highest_prob_am = prob_am
-            detected_text_am = clear_text(text_am)
-
-    image_name_in_expected_plates(image_name_am, detected_text_am, highest_prob_am, expected_plates, results_am)
+    image_name_in_expected_plates(image_name_am, detected_text_am, expected_plates, results_am)
 
 for image_path_ge in sorted(image_folder_ge.glob("*.png")):
     image_name_ge = image_path_ge.name
-    result_ge = reader.readtext(str(image_path_ge))
+    image_ge = Image.open(image_path_ge)
+    result_ge = pytesseract.image_to_string(image_ge)
 
-    if not result_ge:
+    detected_text_ge = clear_text(result_ge)
+
+    if not detected_text_ge:
         undetected_images_ge.append(image_name_ge)
         continue
 
-    detected_text_ge = ""
-    highest_prob_ge = 0
-
-    for bbox_ge, text_ge, prob_ge in result_ge:
-        if prob_ge > highest_prob_ge:
-            highest_prob_ge = prob_ge
-            detected_text_ge = clear_text(text_ge)
-
-    image_name_in_expected_plates(image_name_ge, detected_text_ge, highest_prob_ge, expected_plates, results_ge)
+    image_name_in_expected_plates(image_name_ge, detected_text_ge, expected_plates, results_ge)
 
 for image_path_eu in sorted(image_folder_eu.glob("*.png")):
     image_name_eu = image_path_eu.name
-    result_eu = reader.readtext(str(image_path_eu))
+    image_eu = Image.open(image_path_eu)
+    result_eu = pytesseract.image_to_string(image_eu)
 
-    if not result_eu:
+    detected_text_eu = clear_text(result_eu)
+
+    if not detected_text_eu:
         undetected_images_eu.append(image_name_eu)
         continue
 
-    detected_text_eu = ""
-    highest_prob_eu = 0
-
-    for bbox_eu, text_eu, prob_eu in result_eu:
-        if prob_eu > highest_prob_eu:
-            highest_prob_eu = prob_eu
-            detected_text_eu = clear_text(text_eu)
-
-    image_name_in_expected_plates(image_name_eu, detected_text_eu, highest_prob_eu, expected_plates, results_eu)
+    image_name_in_expected_plates(image_name_eu, detected_text_eu, expected_plates, results_eu)
 
 for image_path_ru in sorted(image_folder_ru.glob("*.png")):
     image_name_ru = image_path_ru.name
-    result_ru = reader.readtext(str(image_path_ru))
+    image_ru = Image.open(image_path_ru)
+    result_ru = pytesseract.image_to_string(image_ru)
 
-    if not result_ru:
+    detected_text_ru = clear_text(result_ru)
+
+    if not detected_text_ru:
         undetected_images_ru.append(image_name_ru)
         continue
 
-    detected_text_ru = ""
-    highest_prob_ru = 0
+    image_name_in_expected_plates(image_name_ru, detected_text_ru, expected_plates, results_ru)
 
-    for bbox_ru, text_ru, prob_ru in result_ru:
-        if prob_ru > highest_prob_ru:
-            highest_prob_ru = prob_ru
-            detected_text_ru = clear_text(text_ru)
 
-    image_name_in_expected_plates(image_name_ru, detected_text_ru, highest_prob_ru, expected_plates, results_ru)
-
-with open("plate_results_1000.txt", 'w', newline='') as fl:
-    fl.write("Image Name | Expected Plate | Detected Plate | Match | Confidence | CER \n")
+with open("plate_results_tesseract_grayscale_1000.txt", 'w', newline='') as fl:
+    fl.write("Image Name | Expected Plate | Detected Plate | Match | CER \n")
     fl.write("-" * 80 + "\n")
 
     for item in results_am:
         match_str = "✓" if item["match"] else "✗"
         fl.write(
-            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['confidence']:.2f} | {item['CER']:.2f} \n")
+            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['CER']:.2f} \n")
 
     for item in results_ge:
         match_str = "✓" if item["match"] else "✗"
         fl.write(
-            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['confidence']:.2f} | {item['CER']:.2f} \n")
+            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['CER']:.2f} \n")
 
     for item in results_eu:
         match_str = "✓" if item["match"] else "✗"
         fl.write(
-            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['confidence']:.2f} | {item['CER']:.2f} \n")
+            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['CER']:.2f} \n")
 
     for item in results_ru:
         match_str = "✓" if item["match"] else "✗"
         fl.write(
-            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['confidence']:.2f} | {item['CER']:.2f} \n")
+            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['CER']:.2f} \n")
 
     fl.write("\n\nSummary:\n")
 

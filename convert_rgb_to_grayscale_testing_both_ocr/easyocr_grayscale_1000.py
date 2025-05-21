@@ -6,17 +6,14 @@ from pathlib import Path
 from algorithm import levenshtein_distance
 
 reader = easyocr.Reader(['en'])
-reader2 = easyocr.Reader(['en', 'hy'])
+# reader2 = easyocr.Reader(['en', 'hy'])
 
-# csv_file = "/Users/picsartacademy/Desktop/ALPR/ALPR-142/number_plate.csv"
 csv_file = "/home/martin/PycharmProjects/ALPR/ALPR-150/number_plate_1000.csv"
-# image_folder = Path("/Users/picsartacademy/Desktop/cropped_plates/images")
-image_folder = Path("/home/martin/Desktop/cropped_plates/images")
 
-image_folder_am = Path("/home/martin/Desktop/cropped_plates_1000/images/armenian")
-image_folder_ge = Path("/home/martin/Desktop/cropped_plates_1000/images/georgian")
-image_folder_eu = Path("/home/martin/Desktop/cropped_plates_1000/images/eu/images")
-image_folder_ru = Path("/home/martin/Desktop/cropped_plates_1000/images/russian")
+image_folder_am = Path("/home/martin/Desktop/gray_1000/armenian")
+image_folder_eu = Path("/home/martin/Desktop/gray_1000/eu")
+image_folder_ge = Path("/home/martin/Desktop/gray_1000/georgian")
+image_folder_ru = Path("/home/martin/Desktop/gray_1000/russian")
 
 
 def clear_text(string: str):
@@ -38,7 +35,7 @@ def image_name_in_expected_plates(image_name_func, detected_text, highest_prob, 
             "detected": detected_text,
             "match": expected_plate_func == detected_text,
             "confidence": highest_prob,
-            "CER": 1 - (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
+            "CER": (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
         })
 
 with open(csv_file, 'r', newline='') as csvfile:
@@ -63,7 +60,7 @@ undetected_images_ru = []
 
 for image_path_am in sorted(image_folder_am.glob("*.png")):
     image_name_am = image_path_am.name
-    result_am = reader2.readtext(str(image_path_am))
+    result_am = reader.readtext(str(image_path_am))
 
     if not result_am:
         undetected_images_am.append(image_name_am)
@@ -133,7 +130,7 @@ for image_path_ru in sorted(image_folder_ru.glob("*.png")):
 
     image_name_in_expected_plates(image_name_ru, detected_text_ru, highest_prob_ru, expected_plates, results_ru)
 
-with open("plate_results_1000.txt", 'w', newline='') as fl:
+with open("plate_results_easyocr_grayscale_1000.txt", 'w', newline='') as fl:
     fl.write("Image Name | Expected Plate | Detected Plate | Match | Confidence | CER \n")
     fl.write("-" * 80 + "\n")
 

@@ -1,20 +1,21 @@
 import os
 import csv
-import pytesseract
 import time
-from PIL import Image
+import easyocr
 from pathlib import Path
-from levenshtein_distance_algorithm import levenshtein_distance
+from algorithm import levenshtein_distance
 
+reader = easyocr.Reader(['en'])
 
 # csv_file = "/Users/picsartacademy/Desktop/ALPR/ALPR-142/number_plate.csv"
-# image_folder = Path("/Users/picsartacademy/Desktop/cropped_plates/images")
 csv_file = "/home/martin/PycharmProjects/ALPR/ALPR-142/number_plate.csv"
-image_folder = Path("/home/martin/Desktop/cropped_plates/images")
+# image_folder = Path("/Users/picsartacademy/Desktop/cropped_plates/images")
+image_folder = Path("/home/martin/Desktop/gray_499")
 
 start_time = time.time()
 
 expected_plates = {}
+
 with open(csv_file, 'r', newline='') as csvfile:
     reader_csv = csv.reader(csvfile)
     for row in reader_csv:
@@ -30,37 +31,42 @@ undetected_images = []
 
 for image_path in sorted(image_folder.glob("*.png")):
     image_name = image_path.name
-    image = Image.open(image_path)
-    ocr_result = pytesseract.image_to_string(image)
+    result = reader.readtext(str(image_path))
 
-    detected_text = ocr_result.strip().replace("/", "").replace(",", "").replace(".", "").replace("-", "").replace(" ", "").replace("|", "").replace("\n", "").lower()
-
-    if not detected_text:
+    if not result:
         undetected_images.append(image_name)
         continue
 
+    detected_text = ""
+    highest_prob = 0
+
+    for bbox, text, prob in result:
+        if prob > highest_prob:
+            highest_prob = prob
+            detected_text = text.replace("/", "").replace(",", "").replace(".", "").replace("-", "").replace(" ", "").replace("|", "").lower()
+
     if image_name in expected_plates:
         expected_plate = expected_plates[image_name]
-        CER = (levenshtein_distance(expected_plate, detected_text) / len(expected_plate)) if expected_plate else 0
         results.append({
             "image_name": image_name,
             "expected": expected_plate,
             "detected": detected_text,
             "match": expected_plate == detected_text,
-            "CER": CER
+            "confidence": highest_prob,
+            "CER": (levenshtein_distance(expected_plate, detected_text) / len(expected_plate))
         })
     else:
         print(f"Warning: No expected value found for {image_name}")
 
-with open("plate_results.txt", 'w', newline='') as fl:
-    fl.write("Image Name | Expected Plate | Detected Plate | Match  | CER \n")
+with open("plate_results_easyocr_grayscale_499.txt", 'w', newline='') as fl:
+    fl.write("Image Name | Expected Plate | Detected Plate | Match | Confidence | CER \n")
     fl.write("-" * 80 + "\n")
     CER_average = 0
     for item in results:
         match_str = "✓" if item["match"] else "✗"
         CER_average += item["CER"]
         fl.write(
-            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['CER']:.2f} \n")
+            f"{item['image_name']} | {item['expected']} | {item['detected']} | {match_str} | {item['confidence']:.2f} | {item['CER']:.2f} \n")
 
     fl.write("\n\nSummary:\n")
     total = len(results)
@@ -76,5 +82,4 @@ with open("plate_results.txt", 'w', newline='') as fl:
         for img in undetected_images:
             fl.write(f"- {img}\n")
 
-print("Processing complete. Results saved to plate_results.txt")
-
+print(f"Processing complete. Results saved to plate_results.txt")

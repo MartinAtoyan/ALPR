@@ -4,13 +4,10 @@ import pytesseract
 import time
 from PIL import Image
 from pathlib import Path
-from levenshtein_distance_algorithm import levenshtein_distance
+from algorithm import levenshtein_distance
 
-
-# csv_file = "/Users/picsartacademy/Desktop/ALPR/ALPR-142/number_plate.csv"
-# image_folder = Path("/Users/picsartacademy/Desktop/cropped_plates/images")
 csv_file = "/home/martin/PycharmProjects/ALPR/ALPR-142/number_plate.csv"
-image_folder = Path("/home/martin/Desktop/cropped_plates/images")
+image_folder = Path("/home/martin/Desktop/gray_499")
 
 start_time = time.time()
 
@@ -52,7 +49,7 @@ for image_path in sorted(image_folder.glob("*.png")):
     else:
         print(f"Warning: No expected value found for {image_name}")
 
-with open("plate_results.txt", 'w', newline='') as fl:
+with open("plate_results_tesseract_grayscale_499.txt", 'w', newline='') as fl:
     fl.write("Image Name | Expected Plate | Detected Plate | Match  | CER \n")
     fl.write("-" * 80 + "\n")
     CER_average = 0
