@@ -10,7 +10,7 @@ for filename in os.listdir(folder_path):
 
     image_path = os.path.join(folder_path, filename)
     image = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    blured = cv2.GaussianBlur(image, (5, 5), 0)
+    blured = cv2.GaussianBlur(image, (9, 9), 0)
     edges = cv2.Canny(blured, 50, 150)
     cv2.imshow(filename, edges)
     cv2.waitKey(0)
