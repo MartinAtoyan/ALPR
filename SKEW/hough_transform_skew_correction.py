@@ -138,7 +138,7 @@ for filename in os.listdir(folder_path):
         angle_rad = math.atan2(y2 - y1, x2 - x1)
         angle = math.degrees(angle_rad)
     else:
-        print(f"⚠️ No suitable horizontal line found in {filename}")
+        print(f"No suitable horizontal line found in {filename}")
         angle = 0
 
     new_w, new_h = get_rotated_dimensions(w, h, angle)
@@ -162,7 +162,7 @@ for filename in os.listdir(folder_path):
 
     concatenated = np.concatenate((rotated_display, original_display), axis=1)
 
-    cv2.imshow("Original vs Rotated", concatenated)
+    cv2.imshow("Rotated vs Original", concatenated)
     print(f"File: {filename}")
     print(f"Original size: {w}x{h}")
     print(f"New size:{new_w}x{new_h}")
