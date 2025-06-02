@@ -4,7 +4,7 @@ import csv
 import cv2
 import math
 import time
-import easyocr
+import pytesseract
 import numpy as np
 from pathlib import Path
 from extra_func import (get_rotated_dimensions,
@@ -96,7 +96,67 @@ def enhanced_clear_text(string: str):
             replace("_", "").replace(":", "").lower())
 
 
-def process_license_plate_image(image_path, reader, plate_templates, country_type="armenian", display=False):
+def preprocess_image_for_tesseract(image):
+
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image.copy()
+
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    thresh = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                   cv2.THRESH_BINARY, 11, 2)
+
+    kernel = np.ones((2, 2), np.uint8)
+    cleaned = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+
+    return cleaned
+
+
+def extract_text_with_tesseract(image,
+                                custom_config='--psm 8 -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'):
+
+    try:
+        data = pytesseract.image_to_data(image, config=custom_config, output_type=pytesseract.Output.DICT)
+
+        results = []
+        texts = []
+        confidences = []
+
+        for i in range(len(data['text'])):
+            text = data['text'][i].strip()
+            conf = int(data['conf'][i])
+
+            if text and conf > 0:
+                texts.append(text)
+                confidences.append(conf / 100.0)
+
+        if texts:
+            combined_text = ''.join(texts)
+            avg_confidence = sum(confidences) / len(confidences)
+            results.append((combined_text, avg_confidence))
+
+
+        psm_modes = [7, 8, 13]
+        for psm in psm_modes:
+            try:
+                config = f'--psm {psm} -c tessedit_char_whitelist=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                text = pytesseract.image_to_string(image, config=config).strip()
+                if text:
+
+                    confidence = min(0.8, len(text) * 0.1)
+                    results.append((text, confidence))
+            except:
+                continue
+
+        return results
+
+    except Exception as e:
+        print(f"Tesseract OCR error: {e}")
+        return []
+
+
+def process_license_plate_image(image_path, plate_templates, country_type="armenian", display=False):
     filename = Path(image_path).name
     image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
 
@@ -162,11 +222,11 @@ def process_license_plate_image(image_path, reader, plate_templates, country_typ
 
     upscaled = cv2.resize(rotated_gray, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
 
-    result = reader.readtext(upscaled, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    preprocessed = preprocess_image_for_tesseract(upscaled)
 
-    # print(f"    OCR Raw Results for {filename}:")
-    # for i, (bbox, text, prob) in enumerate(result):
-        # print(f"      {i + 1}. Text: '{text}' | Confidence: {prob:.3f}")
+    ocr_results = extract_text_with_tesseract(preprocessed)
+
+    ocr_results.extend(extract_text_with_tesseract(upscaled))
 
     target_templates = plate_templates.get_country_templates(country_type)
 
@@ -178,7 +238,7 @@ def process_license_plate_image(image_path, reader, plate_templates, country_typ
 
     valid_candidates = []
 
-    for bbox, text, prob in result:
+    for text, prob in ocr_results:
         cleaned_text = enhanced_clear_text(text)
         cleaned_text = plate_templates._remove_country_codes(cleaned_text)
         is_match, template_name, temp_conf = plate_templates.matches_template(
@@ -202,7 +262,7 @@ def process_license_plate_image(image_path, reader, plate_templates, country_typ
         matched_template = best_candidate['template_name']
         template_confidence = best_candidate['template_confidence']
     else:
-        for bbox, text, prob in result:
+        for text, prob in ocr_results:
             if prob > highest_prob:
                 highest_prob = prob
                 cleaned_fallback = enhanced_clear_text(text)
@@ -272,8 +332,6 @@ def main():
         "russian": Path("/home/martin/Desktop/cropped_plates_1000/images/russian")
     }
 
-    reader_en = easyocr.Reader(['en'])
-    # reader_multilang = easyocr.Reader(['en', 'hy'])
 
     plate_templates = LicensePlateTemplates()
 
@@ -323,13 +381,10 @@ def main():
 
         print(f"\nProcessing {country.upper()} images...")
 
-        current_reader = reader_en
-
         for image_path in sorted(image_folder.glob("*.png")):
-            # print(f"Processing: {image_path.name}")
 
             result = process_license_plate_image(
-                image_path, current_reader, plate_templates, country, display=False
+                image_path, plate_templates, country, display=False
             )
 
             if result is None:
@@ -354,16 +409,10 @@ def main():
                     'template_confidence': result["template_confidence"],
                     'skew_angle': result["skew_angle"]
                 })
-                # print(f"  ✓ TEMPLATE MATCH: '{detected_text}' "
-                #       f"(Template: {result['matched_template']}, "
-                #       f"Confidence: {confidence:.3f}, "
-                #       f"Skew: {result['skew_angle']:.1f}°)")
-            # else:
-            #     print(f"  ✗ No template match: '{detected_text}' (Confidence: {confidence:.3f})")
 
-    output_file = "img_proc_easyocr_plate_results_1000.txt"
+    output_file = "img_proc_tesseract_plate_results_1000.txt"
     with open(output_file, 'w', newline='') as fl:
-        fl.write("Enhanced Multi-Country License Plate Recognition Results\n")
+        fl.write("Enhanced Multi-Country License Plate Recognition Results (Tesseract OCR)\n")
         fl.write("=" * 80 + "\n")
         fl.write("Image Name | Expected | Detected | Match | Confidence | CER | Country\n")
         fl.write("-" * 80 + "\n")
@@ -461,7 +510,7 @@ def main():
     print(f"\nProcessing complete! Results saved to {output_file}")
     print(f"Total processing time: {(time.time() - start_time):.2f} seconds")
 
-    return all_results, template_matched_images, undetected
+    return all_results, template_matched_images, undetected_images
 
 
 if __name__ == "__main__":
