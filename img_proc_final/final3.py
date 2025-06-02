@@ -297,3 +297,5 @@ def main():
 
 if __name__ == "__main__":
     results_am, template_matched, undetected = main()
+
+# change for 1000 dataset with labels
