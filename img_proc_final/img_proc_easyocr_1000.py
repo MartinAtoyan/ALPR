@@ -251,7 +251,7 @@ def process_license_plate_image(image_path, reader, plate_templates, country_typ
 def image_name_in_expected_plates(image_name_func, detected_text, highest_prob, expect_plates, results_func):
     if image_name_func in expect_plates:
         expected_plate_func = expect_plates[image_name_func]
-        cer = 1 - (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
+        cer = (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
         results_func.append({
             "image_name": image_name_func,
             "expected": expected_plate_func,
