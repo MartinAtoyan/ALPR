@@ -6,7 +6,8 @@ import easyocr
 import re
 from pathlib import Path
 
-from img_proc_final.extra_func import get_rotated_dimensions, select_license_plate_line, image_name_in_expected_plates, clear_text
+from img_proc_final.extra_func import get_rotated_dimensions, select_license_plate_line, image_name_in_expected_plates, \
+    clear_text
 
 
 class LicensePlateTemplates:
@@ -132,13 +133,7 @@ def process_license_plate_image(image_path, reader, plate_templates, target_temp
 
     upscaled = cv2.resize(rotated_gray, None, fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
 
-    # _, thresh = cv2.threshold(rotated_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
-    # cleaned = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-
     result_am = reader.readtext(upscaled, allowlist='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
-
 
     print(f"    OCR Raw Results for {filename}:")
     for i, (bbox_am, text_am, prob_am) in enumerate(result_am):
@@ -186,7 +181,7 @@ def process_license_plate_image(image_path, reader, plate_templates, target_temp
 
 
 def main():
-    folder_path = "/Users/picsartacademy/Desktop/ALPR/Demo/mini_dataset"
+    folder_path = "/Demo_1/mini_dataset"
 
     reader = easyocr.Reader(['en'])
     plate_templates = LicensePlateTemplates()
@@ -297,5 +292,3 @@ def main():
 
 if __name__ == "__main__":
     results_am, template_matched, undetected = main()
-
-# change for 1000 dataset with labels (CER computing from labels)
