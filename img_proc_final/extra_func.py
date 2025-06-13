@@ -1,6 +1,21 @@
 import math
 import time
+import cv2
 
+def  maintain_aspect_ratio_resize(image,  width=None,  height=None,  inter=cv2.INTER_AREA):
+    dim =  None
+    (h, w)  = image.shape[:2]
+    if width is  None  and height is  None:
+        return image
+
+    if width is  None:
+        r = height /  float(h)
+        dim =  (int(w * r), height)
+    else:
+        r = width /  float(w)
+        dim =  (width,  int(h * r))
+
+    return cv2.resize(image, dim,  interpolation=inter)
 
 def get_rotated_dimensions(w, h, angle_deg):
     angle_rad = math.radians(abs(angle_deg))
@@ -97,7 +112,7 @@ def select_license_plate_line(lines_lst, image_shape, debug=False):
 def clear_text(string: str):
     return (string.replace("/", "").replace(",", "").
             replace(".", "").replace("-", "").
-            replace(" ", "").replace("|", "").lower())
+            replace(" ", "").replace("|", "").replace("-", "").lower())
 
 
 start_time = time.time()
@@ -109,7 +124,7 @@ def image_name_in_expected_plates(image_name_func, detected_text, highest_prob, 
             "image_name": image_name_func,
             "detected": detected_text,
             "confidence": highest_prob
-            # "CER": 1 - (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
+            # "CER": (levenshtein_distance(expected_plate_func, detected_text) / max(1, len(expected_plate_func)))
         })
 
 #
